@@ -3,12 +3,16 @@ using UnityEngine;
 
 public class PlayerAccount : MonoBehaviour
 {
-    private Guid _id;
+    [SerializeField]
+    private PlayerAccountView _playerAccountView;
+
+    private static Guid _id;
 
     private void Awake()
     {
         _id = Guid.NewGuid();
+        _playerAccountView.SetPlayerIdText(_id.ToString());
     }
 
-    public Guid ID => _id;
+    public static Guid ID => _id;
 }

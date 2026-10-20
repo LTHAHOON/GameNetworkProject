@@ -5,7 +5,6 @@ public class NetworkPlayerStatController : NetworkBehaviour
 {
     private readonly NetworkVariable<int> _curScore = new(0);
     private PlayerStatView _playerStatView;
-    private PlayerAccount _playerAccount;
 
     public override void OnNetworkSpawn()
     {
@@ -27,11 +26,7 @@ public class NetworkPlayerStatController : NetworkBehaviour
         _curScore.OnValueChanged += _playerStatView.SetScoreText;
         _curScore.OnValueChanged += OnScoreChanged;
 
-        if(!_playerAccount)
-        {
-            _playerAccount = FindAnyObjectByType<PlayerAccount>();
-        }
-        if(NetworkPlayerManager.Instance.TryGetScoreData(_playerAccount.ID, out int curScore))
+        if(NetworkPlayerManager.Instance.TryGetScoreData(PlayerAccount.ID, out int curScore))
         {
             SetScoreRpc(curScore);
         }
@@ -53,13 +48,13 @@ public class NetworkPlayerStatController : NetworkBehaviour
         _curScore.OnValueChanged -= OnScoreChanged;
     }
 
-    [Rpc(SendTo.Server)]
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Server)]
     public void AddScoreRpc(int addAmount)
     {
         _curScore.Value += addAmount;
     }
     
-    [Rpc(SendTo.Server)]
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void SetScoreRpc(int curScore)
     {
         _curScore.Value = curScore;
@@ -67,6 +62,6 @@ public class NetworkPlayerStatController : NetworkBehaviour
 
     public void OnScoreChanged(int previousValue, int newValue)
     {
-        NetworkPlayerManager.Instance.SetScoreData(_playerAccount.ID, newValue);
+        NetworkPlayerManager.Instance.SetScoreData(PlayerAccount.ID, newValue);
     }
 }

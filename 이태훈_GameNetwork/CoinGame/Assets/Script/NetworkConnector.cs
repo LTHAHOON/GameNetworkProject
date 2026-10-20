@@ -3,30 +3,50 @@ using UnityEngine;
 
 public class NetworkConnector : MonoBehaviour
 {
-    public void ConnectHost()
+    [SerializeField] 
+    private Spawner _defaultPlayerSpawner;
+
+    private void OnConnectedCallBack(ulong clientId)
     {
-        if(NetworkManager.Singleton.IsListening)
+         NetworkManager networkManager = NetworkManager.Singleton;
+        if (networkManager == null || _defaultPlayerSpawner == null)
         {
             return;
         }
-        NetworkManager.Singleton.StartHost();
+
+        _defaultPlayerSpawner.SpawnPlayer(clientId);
+    }
+
+    public void ConnectHost()
+    {
+        NetworkManager networkManager = NetworkManager.Singleton;
+        if (networkManager == null || networkManager.IsListening || networkManager.IsClient)
+        {
+            return;
+        }
+        networkManager.OnClientConnectedCallback += OnConnectedCallBack;
+        networkManager.StartHost();
     }
 
     public void ConnectClient()
     {
-        if(NetworkManager.Singleton.IsListening)
+        NetworkManager networkManager = NetworkManager.Singleton;
+        if (networkManager == null || networkManager.IsListening)
         {
             return;
         }
-        NetworkManager.Singleton.StartClient();
+        networkManager.OnClientConnectedCallback += OnConnectedCallBack;
+        networkManager.StartClient();
     }
 
     public void DisConnectClient()
     {
-        if(!NetworkManager.Singleton.IsListening)
+        NetworkManager networkManager = NetworkManager.Singleton;
+        if (networkManager == null || !networkManager.IsListening || networkManager.IsServer)
         {
             return;
         }
-        NetworkManager.Singleton.Shutdown();
+        networkManager.OnClientConnectedCallback -= OnConnectedCallBack;
+        networkManager.Shutdown();
     }
 }

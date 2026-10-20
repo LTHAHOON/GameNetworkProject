@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 6159873390688920678}
   - component: {fileID: 3294580167676758086}
   - component: {fileID: 5609413358507253651}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -81,7 +81,7 @@ MonoBehaviour:
   Ownership: 1
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
-  m_InScenePlaced: 1
+  m_InScenePlaced: 0
   ActiveSceneSynchronization: 0
   SceneMigrationSynchronization: 0
   SpawnWithObservers: 1
@@ -161,6 +161,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 393a29143a009a44db30f35b8edd466e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NetworkPlayerStatController
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &7302139351057527252
 GameObject:
   m_ObjectHideFlags: 0
