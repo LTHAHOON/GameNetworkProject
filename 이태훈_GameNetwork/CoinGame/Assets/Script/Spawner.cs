@@ -87,10 +87,9 @@ public class Spawner : MonoBehaviour
             Debug.LogError("ERROR: SpawnPrefab에 NetworkObject가 포함되지않습니다.");
             return;
         }
-       
         _spawnCts?.Cancel();
         _spawnCts = CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken);
-        SpawnPlayerAsync(_spawnCts, networkObject, clientId).Forget();
+        SpawnPlayerAsync(_spawnCts.Token, networkObject, clientId).Forget();
     }
 
     public void CancelSpawnPlayer()
@@ -99,12 +98,13 @@ public class Spawner : MonoBehaviour
         _spawnCts = CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken);
     }
 
-    private async UniTask SpawnPlayerAsync(CancellationTokenSource spawnCts, NetworkObject networkObject, ulong clientId)
+    private async UniTask SpawnPlayerAsync(CancellationToken token, NetworkObject networkObject, ulong clientId)
     {
         try
         {
-            await UniTask.Delay(TimeSpan.FromSeconds(_spawnDelay), cancellationToken: spawnCts.Token);
-            await SpawnAsyncForNetwork(spawnCts.Token, networkObject, clientId);
+            await UniTask.Delay(TimeSpan.FromSeconds(_spawnDelay), cancellationToken: token);
+            token.ThrowIfCancellationRequested();
+            await SpawnAsyncForNetwork(token, networkObject, clientId);
         }
         catch (OperationCanceledException) { }
         catch (Exception ex)
@@ -113,8 +113,8 @@ public class Spawner : MonoBehaviour
         }
         finally
         {
+            _spawnCts?.Dispose();
             _spawnCts = null;
-            spawnCts.Dispose();
         }
     }
 
@@ -276,7 +276,6 @@ public class Spawner : MonoBehaviour
         {
             if(!_isLoop)
             {
-                _spawnCts?.Cancel();
                 _spawnCts?.Dispose();
                 _spawnCts = null;
             }

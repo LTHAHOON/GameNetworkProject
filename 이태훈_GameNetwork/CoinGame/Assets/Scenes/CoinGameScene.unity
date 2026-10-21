@@ -198,7 +198,7 @@ MonoBehaviour:
   _onAwakeSpawn: 0
   _isLoop: 0
   _spawnCount: 1
-  _spawnDelay: 3
+  _spawnDelay: 1
   _spawnArea: {x: 5, y: 0, z: 3.5}
   _drawArea: 1
   _checkRadius: 0.7

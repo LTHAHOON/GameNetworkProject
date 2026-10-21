@@ -1,20 +1,19 @@
-using System;
+﻿using System;
 using Unity.Netcode;
 using UnityEngine;
 
 public class NetworkConnector : MonoBehaviour
 {
-    [SerializeField] 
+    [SerializeField]
     private Spawner _defaultPlayerSpawner;
 
     private void OnConnectedCallBack(ulong clientId)
     {
-         NetworkManager networkManager = NetworkManager.Singleton;
+        NetworkManager networkManager = NetworkManager.Singleton;
         if (networkManager == null || !networkManager.IsServer || _defaultPlayerSpawner == null)
         {
             return;
         }
-
         if (!networkManager.ConnectedClients.ContainsKey(clientId))
         {
             return;
@@ -22,9 +21,10 @@ public class NetworkConnector : MonoBehaviour
 
         _defaultPlayerSpawner.SpawnPlayer(clientId);
     }
+
     private void OnDisconnectedCallBack(ulong clientId)
     {
-        _defaultPlayerSpawner.CancelSpawnPlayer();
+        _defaultPlayerSpawner?.CancelSpawnPlayer();
     }
 
     public void ConnectHost()
@@ -32,29 +32,42 @@ public class NetworkConnector : MonoBehaviour
         NetworkManager networkManager = NetworkManager.Singleton;
         if (networkManager == null || networkManager.IsListening || networkManager.IsClient)
         {
-            Debug.Log("이미 서버가 실행중이거나 NetworkManager가 NULL일 수있습니다.");
+            Debug.Log("서버가 이미 열려있거나 NetworkManager가 NULL입니다.");
             return;
         }
-        
+
+        networkManager.OnClientConnectedCallback -= OnConnectedCallBack;
+        networkManager.OnClientDisconnectCallback -= OnDisconnectedCallBack;
         networkManager.OnClientConnectedCallback += OnConnectedCallBack;
+        networkManager.OnClientDisconnectCallback += OnDisconnectedCallBack;
+
         PlayerAccount.IsOnline = networkManager.StartHost();
         if (!PlayerAccount.IsOnline)
         {
             networkManager.OnClientConnectedCallback -= OnConnectedCallBack;
-            Debug.Log("이미 서버가 실행중입니다.");
+            networkManager.OnClientDisconnectCallback -= OnDisconnectedCallBack;
+            Debug.Log("서버가 이미 열려있습니다.");
         }
     }
 
     public void ConnectClient()
     {
         NetworkManager networkManager = NetworkManager.Singleton;
-        if (networkManager == null || networkManager.IsListening)
+        if (networkManager == null || networkManager.IsListening || networkManager.IsServer)
         {
+            Debug.Log("이미 클라이언트 접속한 상태이거나 서버가 열려있지 않은 상태이거나 서버 소유권을 가지고 있습니다.");
             return;
         }
+
+        networkManager.OnClientConnectedCallback -= OnConnectedCallBack;
+        networkManager.OnClientDisconnectCallback -= OnDisconnectedCallBack;
         networkManager.OnClientConnectedCallback += OnConnectedCallBack;
-        networkManager.OnClientConnectedCallback -= OnDisconnectedCallBack;
+        networkManager.OnClientDisconnectCallback += OnDisconnectedCallBack;
         PlayerAccount.IsOnline = networkManager.StartClient();
+        if(!PlayerAccount.IsOnline)
+        {
+            Debug.Log("서버가 열려있지 않습니다.");
+        }
     }
 
     public void DisConnectClient()
@@ -62,11 +75,26 @@ public class NetworkConnector : MonoBehaviour
         NetworkManager networkManager = NetworkManager.Singleton;
         if (networkManager == null || !networkManager.IsListening || networkManager.IsServer)
         {
+            Debug.Log("클라이언트 접속하지 않은 상태입니다.");
             return;
         }
+
         networkManager.OnClientConnectedCallback -= OnConnectedCallBack;
-        networkManager.OnClientConnectedCallback += OnDisconnectedCallBack;
+        networkManager.OnClientDisconnectCallback -= OnDisconnectedCallBack;
+        networkManager.OnClientDisconnectCallback += OnDisconnectedCallBack;
+        
         networkManager.Shutdown();
         PlayerAccount.IsOnline = false;
+    }
+
+    private void OnDestroy()
+    {
+        NetworkManager networkManager = NetworkManager.Singleton;
+        if (networkManager != null)
+        {
+            networkManager.OnClientConnectedCallback -= OnConnectedCallBack;
+            networkManager.OnClientDisconnectCallback -= OnDisconnectedCallBack;
+        }
+            
     }
 }
