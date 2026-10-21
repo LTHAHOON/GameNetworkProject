@@ -22,6 +22,10 @@ public class NetworkConnector : MonoBehaviour
 
         _defaultPlayerSpawner.SpawnPlayer(clientId);
     }
+    private void OnDisconnectedCallBack(ulong clientId)
+    {
+        _defaultPlayerSpawner.CancelSpawnPlayer();
+    }
 
     public void ConnectHost()
     {
@@ -33,8 +37,8 @@ public class NetworkConnector : MonoBehaviour
         }
         
         networkManager.OnClientConnectedCallback += OnConnectedCallBack;
-        bool started = networkManager.StartHost();
-        if (!started)
+        PlayerAccount.IsOnline = networkManager.StartHost();
+        if (!PlayerAccount.IsOnline)
         {
             networkManager.OnClientConnectedCallback -= OnConnectedCallBack;
             Debug.Log("이미 서버가 실행중입니다.");
@@ -49,7 +53,8 @@ public class NetworkConnector : MonoBehaviour
             return;
         }
         networkManager.OnClientConnectedCallback += OnConnectedCallBack;
-        networkManager.StartClient();
+        networkManager.OnClientConnectedCallback -= OnDisconnectedCallBack;
+        PlayerAccount.IsOnline = networkManager.StartClient();
     }
 
     public void DisConnectClient()
@@ -60,6 +65,8 @@ public class NetworkConnector : MonoBehaviour
             return;
         }
         networkManager.OnClientConnectedCallback -= OnConnectedCallBack;
+        networkManager.OnClientConnectedCallback += OnDisconnectedCallBack;
         networkManager.Shutdown();
+        PlayerAccount.IsOnline = false;
     }
 }

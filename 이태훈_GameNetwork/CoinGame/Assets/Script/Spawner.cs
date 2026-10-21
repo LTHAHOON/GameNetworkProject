@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -56,6 +56,16 @@ public class Spawner : MonoBehaviour
         }
     }
 
+    public void OnDestroy()
+    {
+        if(_spawnCts is not null)
+        {
+            _spawnCts.Cancel();
+            _spawnCts.Dispose();
+            _spawnCts = null;
+        }
+    }
+
     public void Spawn()
     {
         SpawnAsync(_spawnCts.Token, _spawnCount).Forget();
@@ -68,7 +78,7 @@ public class Spawner : MonoBehaviour
         {
             return;
         }
-        if (!networkManager.ConnectedClients.TryGetValue(clientId, out var client))
+        if (!networkManager.ConnectedClients.ContainsKey(clientId))
         {
             return;
         }
@@ -77,21 +87,34 @@ public class Spawner : MonoBehaviour
             Debug.LogError("ERROR: SpawnPrefab에 NetworkObject가 포함되지않습니다.");
             return;
         }
-
-        SpawnPlayerAsync(_spawnCts.Token, networkObject, clientId).Forget();
+       
+        _spawnCts?.Cancel();
+        _spawnCts = CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken);
+        SpawnPlayerAsync(_spawnCts, networkObject, clientId).Forget();
     }
 
-    private async UniTask SpawnPlayerAsync(CancellationToken token, NetworkObject networkObject, ulong clientId)
+    public void CancelSpawnPlayer()
+    {
+        _spawnCts?.Cancel();
+        _spawnCts = CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken);
+    }
+
+    private async UniTask SpawnPlayerAsync(CancellationTokenSource spawnCts, NetworkObject networkObject, ulong clientId)
     {
         try
         {
-            await UniTask.Delay(TimeSpan.FromSeconds(_spawnDelay), cancellationToken: token);
-            await SpawnAsyncForNetwork(token, networkObject, clientId);
+            await UniTask.Delay(TimeSpan.FromSeconds(_spawnDelay), cancellationToken: spawnCts.Token);
+            await SpawnAsyncForNetwork(spawnCts.Token, networkObject, clientId);
         }
         catch (OperationCanceledException) { }
         catch (Exception ex)
         {
-            Debug.LogException(ex, this);
+            Debug.LogError(ex.Message);
+        }
+        finally
+        {
+            _spawnCts = null;
+            spawnCts.Dispose();
         }
     }
 
@@ -127,7 +150,7 @@ public class Spawner : MonoBehaviour
         catch (OperationCanceledException) { }
         catch (Exception ex)
         {
-            Debug.LogException(ex, this);
+            Debug.LogError(ex.Message);
         }
     }
 
@@ -159,7 +182,7 @@ public class Spawner : MonoBehaviour
         catch (OperationCanceledException) { }
         catch (Exception ex)
         {
-            Debug.LogException(ex, this);
+            Debug.LogError(ex.Message);
         }
         return transform.position;
     }
@@ -174,11 +197,13 @@ public class Spawner : MonoBehaviour
                 return null;
             }
             Vector3 spawnPosition = await GetSpawnPosition(token);
+            token.ThrowIfCancellationRequested();
             NetworkObject newNetworkObject = Instantiate(networkObject);
 
             newNetworkObject.transform.position = spawnPosition;
             if (clientId.HasValue)
             {
+                token.ThrowIfCancellationRequested();
                 newNetworkObject.SpawnAsPlayerObject(clientId.Value);
             }
             else
@@ -245,7 +270,16 @@ public class Spawner : MonoBehaviour
         catch (OperationCanceledException) { }
         catch (Exception ex)
         {
-            Debug.LogException(ex, this);
+            Debug.LogError(ex.Message);
+        }
+        finally
+        {
+            if(!_isLoop)
+            {
+                _spawnCts?.Cancel();
+                _spawnCts?.Dispose();
+                _spawnCts = null;
+            }
         }
     }
 
