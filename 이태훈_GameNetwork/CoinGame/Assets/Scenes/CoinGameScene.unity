@@ -199,13 +199,13 @@ MonoBehaviour:
   _isLoop: 0
   _spawnCount: 1
   _spawnDelay: 1
-  _spawnArea: {x: 3.5, y: 0, z: 3.5}
+  _spawnArea: {x: 5, y: 0, z: 3.5}
   _drawArea: 1
-  _checkRadius: 3.17
+  _checkRadius: 0.7
   _drawCheckRadius: 1
   _blockingLayerMask:
     serializedVersion: 2
-    m_Bits: 256
+    m_Bits: 128
 --- !u!4 &79639844
 Transform:
   m_ObjectHideFlags: 0
@@ -1338,7 +1338,7 @@ Transform:
   m_GameObject: {fileID: 985797980}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.2, z: 3.82}
+  m_LocalPosition: {x: 0, y: 1.2, z: 8.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1362,7 +1362,7 @@ MonoBehaviour:
   _isLoop: 1
   _spawnCount: 10
   _spawnDelay: 1
-  _spawnArea: {x: 13.5, y: 0, z: 15}
+  _spawnArea: {x: 13.5, y: 0, z: 13}
   _drawArea: 1
   _checkRadius: 0.5
   _drawCheckRadius: 1
