@@ -5,6 +5,7 @@ public class NetworkPlayerStatController : NetworkBehaviour
 {
     private readonly NetworkVariable<int> _curScore = new(0);
     private PlayerStatView _playerStatView;
+    
 
     public override void OnNetworkSpawn()
     {
@@ -48,9 +49,17 @@ public class NetworkPlayerStatController : NetworkBehaviour
         _curScore.OnValueChanged -= OnScoreChanged;
     }
 
+    private const int MaxAddScoreAmount = 10000;
+
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Server)]
     public void AddScoreRpc(int addAmount)
     {
+        if (addAmount <= 0 || addAmount > MaxAddScoreAmount)
+        {
+            Debug.LogWarning($"잘못된 점수 증가량: {addAmount}");
+            return;
+        }
+
         _curScore.Value += addAmount;
     }
     

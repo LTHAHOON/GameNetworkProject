@@ -23,7 +23,7 @@
 4. 활성화가 완료되면 게임 플레이를 눌러 테스트를 진행합니다.
 <br>
 <br>
-<img src = "Evidence/Multiplayer Play Mode 화면_01.PNG" width = "600" >
+<img src = "Evidence/Multiplayer Play Mode 화면_01.png" width = "600" >
 </summary>
 
 ### UDP Peer 실행 방법

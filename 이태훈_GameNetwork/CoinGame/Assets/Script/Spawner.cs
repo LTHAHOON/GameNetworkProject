@@ -166,6 +166,7 @@ public class Spawner : MonoBehaviour
                     await UniTask.Yield(PlayerLoopTiming.Update);
                     continue;
                 }
+
                 int canceledCount = 0;
                 foreach (CancellationToken spawnedToken in _spawnedTokens)
                 {
@@ -174,6 +175,7 @@ public class Spawner : MonoBehaviour
                         ++canceledCount;
                     }
                 }
+
                 if (canceledCount > 0)
                 {
                     _spawnedTokens.RemoveAll(x => x.IsCancellationRequested);
@@ -234,8 +236,8 @@ public class Spawner : MonoBehaviour
             }
             Vector3 spawnPosition = await GetSpawnPosition(token);
             token.ThrowIfCancellationRequested();
+            
             NetworkObject newNetworkObject = Instantiate(networkObject);
-
             newNetworkObject.transform.position = spawnPosition;
             if (clientId.HasValue)
             {
