@@ -14,11 +14,9 @@
 * Client가 맡은 역할은 플레이어 이동입니다.
 
 ## 코인 게임 구성도와 요청·판정 결과가 이동하는 데이터 흐름
-<summary>
-1.  코인은 비동기로 Trigger 반응을 기다리게 됩니다.<br><br>
-2.  플레이어가 코인을 Trigger시키면 RPC 호출를 통해 서버        공간에서 Score를 해당 플레이이의 스코어를 증가 시키고 해당 코인은 Despawn과 Destroy가 됩니다.<br><br>
-3. 그 순간 코인 Spawner에서 기록했던 Token을 통해 비동기적으로 진위(Cancel)여부를 판단하여 재스폰 과정을 거치게 됩니다.<br><br>
-</summary>
+1.  코인은 비동기로 Trigger 반응을 기다리게 됩니다.
+2. 플레이어가 코인을 Trigger시키면 RPC 호출를 통해 서버        공간에서 Score를 해당 플레이이의 스코어를 증가 시키고 해당 코인은 Despawn과 Destroy가 됩니다.
+3. 그 순간 코인 Spawner에서 기록했던 Token을 통해 비동기적으로 진위(Cancel)여부를 판단하여 재스폰 과정을 거치게 됩니다.
 
 <img src = "Evidence/CoinGameDiagram.png" width = 600>
 
