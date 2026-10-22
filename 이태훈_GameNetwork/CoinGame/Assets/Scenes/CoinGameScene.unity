@@ -196,6 +196,7 @@ MonoBehaviour:
   _spawnType: 1
   _spawnPrefab: {fileID: 5359521999124769492, guid: d64d0af4d0985ef47a0a441c5ae15808, type: 3}
   _onAwakeSpawn: 0
+  _isDefaultPlayerSpawner: 1
   _isLoop: 0
   _spawnCount: 1
   _spawnDelay: 1
@@ -1101,7 +1102,7 @@ Transform:
   m_GameObject: {fileID: 374927708}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 638.07983, y: -0.00001, z: 2527.8735}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1498,6 +1499,7 @@ MonoBehaviour:
   _spawnType: 1
   _spawnPrefab: {fileID: 4443462814033396138, guid: 419af0feaf3e681488458f05965cc734, type: 3}
   _onAwakeSpawn: 1
+  _isDefaultPlayerSpawner: 0
   _isLoop: 1
   _spawnCount: 10
   _spawnDelay: 0.5

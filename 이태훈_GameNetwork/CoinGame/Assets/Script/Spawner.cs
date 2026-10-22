@@ -19,6 +19,8 @@ public class Spawner : MonoBehaviour
     private GameObject _spawnPrefab;
     [SerializeField]
     private bool _onAwakeSpawn;
+    [SerializeField]
+    private bool _isDefaultPlayerSpawner;
 
     [Space(10f)]
     [SerializeField]
@@ -40,10 +42,16 @@ public class Spawner : MonoBehaviour
 
     private List<CancellationToken> _spawnedTokens;
     private CancellationTokenSource _spawnCts;
+    private Dictionary<ulong, CancellationTokenSource> _dicSpawnPlayerCts;
     private const int MAX_ITER = 100;
 
     private void Awake()
     {
+        if(_isDefaultPlayerSpawner)
+        {
+            return;
+        }
+        
         _spawnCts = CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken);
         if (_isLoop)
         {
@@ -56,6 +64,21 @@ public class Spawner : MonoBehaviour
         }
     }
 
+    private void OnValidate()
+    {
+        if(_isDefaultPlayerSpawner)
+        {
+            if(_spawnType != SpawnType.NetworkObject)
+            {
+                Debug.LogWarning("Warning: DefaultPlayerSpawner로 사용할 경우 SpawnType을 NetworkObject로 지정하십시오.");
+            }
+            if(!FindAnyObjectByType<NetworkConnector>())
+            {
+                Debug.LogWarning("Warning: DefaultPlayerSpawner로 사용할 경우 NetworkConnector가 필요합니다.");
+            }
+        }
+    }
+
     public void OnDestroy()
     {
         if(_spawnCts is not null)
@@ -63,6 +86,15 @@ public class Spawner : MonoBehaviour
             _spawnCts.Cancel();
             _spawnCts.Dispose();
             _spawnCts = null;
+        }
+        if(_dicSpawnPlayerCts != null)
+        {
+            foreach (CancellationTokenSource cts in _dicSpawnPlayerCts.Values)
+            {
+                cts?.Cancel();
+                cts?.Dispose();
+            }
+            _dicSpawnPlayerCts.Clear();
         }
     }
 
@@ -74,7 +106,7 @@ public class Spawner : MonoBehaviour
     public void SpawnPlayer(ulong clientId)
     {
         NetworkManager networkManager = NetworkManager.Singleton;
-        if (networkManager == null || !networkManager.IsServer)
+        if (networkManager == null || !networkManager.IsServer || !_isDefaultPlayerSpawner)
         {
             return;
         }
@@ -87,15 +119,24 @@ public class Spawner : MonoBehaviour
             Debug.LogError("ERROR: SpawnPrefab에 NetworkObject가 포함되지않습니다.");
             return;
         }
-        _spawnCts?.Cancel();
-        _spawnCts = CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken);
-        SpawnPlayerAsync(_spawnCts.Token, networkObject, clientId).Forget();
+
+        _dicSpawnPlayerCts ??= new();
+        if(!_dicSpawnPlayerCts.ContainsKey(clientId))
+        {
+            _dicSpawnPlayerCts.Add(clientId, CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken));
+        }
+        SpawnPlayerAsync(_dicSpawnPlayerCts[clientId].Token, networkObject, clientId).Forget();
     }
 
-    public void CancelSpawnPlayer()
+    public void CancelSpawnPlayer(ulong clientId)
     {
-        _spawnCts?.Cancel();
-        _spawnCts = CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken);
+        if(_dicSpawnPlayerCts == null || !_dicSpawnPlayerCts.ContainsKey(clientId))
+        {
+            return;
+        }
+        _dicSpawnPlayerCts[clientId]?.Cancel();
+        _dicSpawnPlayerCts[clientId]?.Dispose();
+        _dicSpawnPlayerCts.Remove(clientId);
     }
 
     private async UniTask SpawnPlayerAsync(CancellationToken token, NetworkObject networkObject, ulong clientId)
@@ -110,11 +151,6 @@ public class Spawner : MonoBehaviour
         catch (Exception ex)
         {
             Debug.LogError(ex.Message);
-        }
-        finally
-        {
-            _spawnCts?.Dispose();
-            _spawnCts = null;
         }
     }
 

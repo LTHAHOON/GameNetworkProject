@@ -25,11 +25,11 @@ public class PlayerAccountView : MonoBehaviour
         _sb.Append("Online Status: ");
         if(isOnline)
         {
-            _sb.Append("Online");
+            _sb.Append("<color=Green>Online</color>");
         }
         else
         {
-            _sb.Append("Offline");
+            _sb.Append("<color=red>Offline</color>");
         }
         _onlineStatusText.SetText(_sb);
     }
