@@ -79,7 +79,7 @@ namespace UdpPeer
                 break;
             }
 
-            _curLocalPeerMsgData.PeerID = args[2];
+            _curLocalPeerMsgData.PeerID = peerName;
 
             IPEndPoint localEndPoint = new(IPAddress.Loopback, localPort);
             IPEndPoint remoteEndPoint = new(IPAddress.Loopback, remotePort);
