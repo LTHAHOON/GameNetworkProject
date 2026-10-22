@@ -35,6 +35,7 @@
 ExportedObj/
 .consulo/
 *.csproj
+!이태훈_GameNetwork/UdpPeer/UdpPeer.csproj
 *.unityproj
 *.sln
 *.suo

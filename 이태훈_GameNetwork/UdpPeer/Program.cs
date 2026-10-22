@@ -32,6 +32,8 @@ namespace UdpPeer
         private static readonly List<PeerMessageData> _ignoredLocalPeerMsgList = new();
         private static PeerMessageData _curLocalPeerMsgData;
         private static PeerMessageData _curRemotePeerMsgData;
+        private const int MAX_NAME_SAFE_BUFFERSIZE = 32;
+        private const int MAX_NAME_SAFE_SIZE = 10;
 
         public static async Task Main(string[] args)
         {
@@ -48,6 +50,35 @@ namespace UdpPeer
                 Console.WriteLine("사용법: dotnet run <내 포트> <상대 포트> <이름>");
                 return;
             }
+
+            string peerName = args[2];
+            int nameBufferLength = UTF8.GetByteCount(peerName);
+            while (peerName.Length > MAX_NAME_SAFE_SIZE || nameBufferLength > MAX_NAME_SAFE_BUFFERSIZE)
+            {
+                Console.Write($"다시 이름을 입력해주세요({MAX_NAME_SAFE_SIZE}자 이하 / 나가기: 0): ");
+                peerName = Console.ReadLine() ?? "";
+                if (int.TryParse(peerName, out int choiceNumber))
+                {
+                    if(choiceNumber == 0)
+                    {
+                        return;
+                    }
+                }
+                nameBufferLength = UTF8.GetByteCount(peerName);
+                
+                if (peerName.Length > MAX_NAME_SAFE_SIZE)
+                {
+                    Console.WriteLine("최대 글자수를 넘었습니다.");
+                    continue;
+                }
+                else if(nameBufferLength > MAX_NAME_SAFE_BUFFERSIZE)
+                {
+                    Console.WriteLine("최대 버퍼 사이즈에 도달하였습니다.");
+                    continue;
+                }
+                break;
+            }
+
             _curLocalPeerMsgData.PeerID = args[2];
 
             IPEndPoint localEndPoint = new(IPAddress.Loopback, localPort);
@@ -71,7 +102,7 @@ namespace UdpPeer
             {
                 foreach (PeerMessageData ignoredPeerMsgData in _ignoredLocalPeerMsgList)
                 {
-                    Console.WriteLine($"무시된 {ignoredPeerMsgData.PeerMessageNumber}번 {ignoredPeerMsgData.PeerID}의 위치: " + 
+                    Console.WriteLine($"무시된 {ignoredPeerMsgData.PeerMessageNumber}번 {ignoredPeerMsgData.PeerID}의 위치: " +
                                     $"({ignoredPeerMsgData.PeerPos.X}, {ignoredPeerMsgData.PeerPos.Y})");
                 }
                 Console.WriteLine("0: 뒤로가기 | 1: 무시된 메시지 정리하고 뒤로가기");
@@ -133,8 +164,8 @@ namespace UdpPeer
                         --_curLocalPeerMsgData.PeerMessageNumber;
                         continue;
                     }
-                    
-                    if(_curLocalPeerMsgData.PeerPos.X == x && _curLocalPeerMsgData.PeerPos.Y == y)
+
+                    if (_curLocalPeerMsgData.PeerPos.X == x && _curLocalPeerMsgData.PeerPos.Y == y)
                     {
                         Console.WriteLine("해당 보낸 메시지는 무시되었습니다.");
                         PeerMessageData ignoredPeerMsgData = _curLocalPeerMsgData;
@@ -143,7 +174,7 @@ namespace UdpPeer
                         continue;
                     }
                     _curLocalPeerMsgData.PeerPos = new(x, y);
-                    
+
                     string localPeerMsgJson = _curLocalPeerMsgData.ToJson(_jsonSerializerOptions);
                     byte[] localPeerMsgByte = UTF8.GetBytes(localPeerMsgJson);
                     await client.SendAsync(localPeerMsgByte, localPeerMsgByte.Length, remoteEndPoint);
@@ -171,7 +202,7 @@ namespace UdpPeer
                         continue;
                     }
                     _curRemotePeerMsgData = peerMessageData.Value;
-                    Console.WriteLine($"{_curRemotePeerMsgData.PeerMessageNumber}번 {_curRemotePeerMsgData.PeerID}의 위치: " + 
+                    Console.WriteLine($"{_curRemotePeerMsgData.PeerMessageNumber}번 {_curRemotePeerMsgData.PeerID}의 위치: " +
                                     $"({_curRemotePeerMsgData.PeerPos.X}, {_curRemotePeerMsgData.PeerPos.Y})");
                 }
             }
